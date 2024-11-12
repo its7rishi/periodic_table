@@ -5,7 +5,7 @@ PSQL="psql --username=freecodecamp --dbname=periodic_table --tuples-only -c"
 MAIN_MENU() {
   if [[ $1 ]]
   then
-    echo -e"\n$1"
+    echo -e "\n$1"
   fi
 
   echo -e "\nPlease provide an element as an argument."
@@ -15,7 +15,7 @@ MAIN_MENU() {
   if [[ ! $USER_INPUT =~ ^[0-9]+$ ]]
 
   then
-    # IF INPUT IS NOT A NUBMBER
+    # IF INPUT IS NOT A NUBMBER, THEN FET INFO USING NAME OR SYMBOL
     ELEMENT=$($PSQL "SELECT atomic_number, name, symbol, atomic_mass, melting_point_celsius, boiling_point_celsius, type
 FROM elements INNER JOIN properties USING(atomic_number)
 INNER JOIN types USING(type_id) WHERE name = '$USER_INPUT' OR symbol = '$USER_INPUT';")
@@ -36,8 +36,26 @@ INNER JOIN types USING(type_id) WHERE name = '$USER_INPUT' OR symbol = '$USER_IN
     fi
   else
 
-  # IF INPUT IS A NUMBER
-  echo "You typed: $USER_INPUT"
+  # IF INPUT IS A NUMBER, THEN GET INFO USING ATOMIC NUMBER
+
+    ELEMENT=$($PSQL "SELECT atomic_number, name, symbol, atomic_mass, melting_point_celsius, boiling_point_celsius, type
+FROM elements INNER JOIN properties USING(atomic_number)
+INNER JOIN types USING(type_id) WHERE atomic_number = $USER_INPUT;")
+
+    # I F ELEMENT IS NOT FOUND THEN SEND RESPONSE
+
+    if [[ -z $ELEMENT ]]
+    then
+      # GIVE RESPONSE AND GO BACK TO MAIN
+      MAIN_MENU "I could not find that element in the database."
+
+    else
+      # IF ELEMENT IS FOUND THEN PROVIDE ELEMENT INFO
+      echo "$ELEMENT" | while read ATOMIC_NUMBER BAR NAME BAR SYMBOL BAR ATOMIC_MASS BAR MELTING_POINT BAR BOILING_POINT BAR TYPE
+      do
+        echo "The element with atomic number $ATOMIC_NUMBER is $NAME ($SYMBOL). It's a $TYPE, with a mass of $ATOMIC_MASS amu. $NAME has a melting point of $MELTING_POINT celsius and a boiling point of $BOILING_POINT celsius."
+      done
+    fi
 
   fi
 
